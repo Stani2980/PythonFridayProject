@@ -7,42 +7,41 @@ Usage $python simulator.py <url> <number of requests>
 import requests
 import time 
 import numpy as np
+import os
 import sys
 import logging
-from multiprocessing import Pool, Manager, Lock
+from multiprocessing import Pool, Manager, Lock, Process
 from datetime import datetime, date
 
 
-# time_to_wait = 2
-        
-def make_request(l, count):
-    logging.basicConfig(filename='info.log', level=logging.INFO)
-    epoch_time_before = time.time()
-    response = requests.get(sys.argv[1]) # url to ping
-    if response.status_code == 200:
-        epoch_time_after = time.time()
-        l.acquire()
-        logging.log(logging.INFO, "It took " + str(epoch_time_after - epoch_time_before) + " seconds to perform this request. Process: " + str(count))
-        print(f'Process: {count}')
-        l.release()
-
-def make_request_globallock(count):
+def work_ordered_by_pooler(count):
     logging.basicConfig(filename='info.log', level=logging.INFO)
     
     for _ in range(count[0]):
-        epoch_time = time.time() # start timer
-        response = requests.get(sys.argv[1]) # url to ping
-        epoch_time = time.time() - epoch_time  # stop timer
+        pid = str(os.getpid())
+        pid = pid[3:]
+        ppid = os.getppid()
         lock.acquire()
-        status = response.status_code
-        timestamp = datetime.now()
-        logging.log(logging.INFO, f' Timestamp: {timestamp} - Status code: {status} - Epoch for request in sec: {epoch_time}')
+        logging.log(logging.INFO, f' Iteration no.: {_ + 1}, MAX iterations: {count[0]} - pid: {pid}, ppid: {ppid}')
         lock.release()
 
 
+def work_in_sorted_order(count):
+    logging.basicConfig(filename='info.log', level=logging.INFO)
+    lock.acquire()
+    for _ in range(count[0]):
+        pid = str(os.getpid())
+        pid = pid[3:]
+        ppid = os.getppid()
+        logging.log(logging.INFO, f' Iteration no.: {_ + 1}, MAX iterations: {count[0]} - pid: {pid}, ppid: {ppid}')
+
+    logging.log(logging.INFO, f'')
+    lock.release()
+
+
 def generate_freq(amount):
-    delta = np.random.uniform(-10, 10, size=(amount,))
-    res = .4 * np.arange(amount) ** 2 + 3 + delta + 10
+    res = np.arange(1,amount+1)
+
     return res.tolist()
 
 
@@ -52,13 +51,12 @@ def init(l):
 
 
 if __name__ == '__main__':
-        
         l = Lock()
-        floatlist = generate_freq(int(sys.argv[2]))
+        floatlist = generate_freq(int(sys.argv[1]))
+        
         mylist = [[int(num)] for num in floatlist]   
-
         pool = Pool(initializer=init, initargs=(l,))
-        pool.map(make_request_globallock, mylist)
+        pool.map(work_ordered_by_pooler, mylist)
         pool.close()
         pool.join()
             
