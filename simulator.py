@@ -14,6 +14,7 @@ from multiprocessing import Pool, Process
 # time_to_wait = 2
         
 def make_request(count):
+    print(count)
     logging.basicConfig(filename='info.log', level=logging.INFO)
     epoch_time_before = time.time()
     response = requests.get(sys.argv[1]) # url to ping
@@ -23,10 +24,10 @@ def make_request(count):
         print(f'Process: {count}')
 
 
-if __name__ == '_main_':
-    for i in range(1, 100): # amount of requests
+if __name__ == '__main__':
+    for i in range(1, int(sys.argv[2])): # amount of requests
         ##with Pool(4) as pool:
         ##  pool.map(make_request, [])
 
-        p = Process(target=make_request, args=([i]))
+        p = Process(target=make_request(1), args=([i]))
         p.start()
