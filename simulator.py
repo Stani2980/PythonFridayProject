@@ -1,7 +1,7 @@
 """
 This script simulates network traffic to a given URL
 
-Usage $python simulator.py [<url>]
+Usage $python simulator.py <url> <number of requests>
 """
 
 import requests
@@ -23,8 +23,8 @@ def make_request(count):
         print(f'Process: {count}')
 
 
-if _name_ == '_main_':
-    for i in range(1, int(sys.argv[2])): # amount of requests
+if __name__ == '_main_':
+    for i in range(1, 100): # amount of requests
         ##with Pool(4) as pool:
         ##  pool.map(make_request, [])
 
