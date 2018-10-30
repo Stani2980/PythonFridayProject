@@ -9,7 +9,7 @@ import sys
  
 class Producer():
  
-    def __init__(self, task_queue, num_consumers, url, num_requests=5, runtime=15):
+    def __init__(self, task_queue, num_consumers, url, num_requests=5, runtime=15, time_interval=5):
         multiprocessing.Process.__init__(self)
         self.task_queue = task_queue
         self.url = url
@@ -18,6 +18,7 @@ class Producer():
         self.num_requests = num_requests
         self.timer = 0
         self._count_timer = 0
+        self.time_interval = time_interval
 
     def _start_timer(self):
         self._count_timer = time.time()
@@ -27,17 +28,16 @@ class Producer():
         self._count_timer = time.time()
         return self.timer
  
-    def _work(self):
-        '''
-        DEF: 
-        '''
-        TIME_INTERVAL = 1
+    def _generate_work(self):
+
         current_time = self._get_time()
         if self.runtime > current_time:
-            # TODO: change to class attribute
-            make_n_request = int(.4 * current_time ** 2 + 3)
-            make_n_request = 1 # TODO: remove
-            thread = threading.Timer(TIME_INTERVAL, self._work)
+            # TODO: change 'make_n_request' to class attribute
+            # make_n_request should be the result of a function
+            # which calculate the number of requests to make, 
+            # given the runtime of the Producer
+            make_n_request = int(.4 * current_time ** 2 + 3) 
+            thread = threading.Timer(self.time_interval, self._generate_work)
             thread.daemon = True # DAEMON COMMENT
             thread.start()
 
@@ -53,12 +53,10 @@ class Producer():
     def run(self):
         self._start_timer()
         print(f'Producer: starting work...')
-        self._work()
+        self._generate_work()
 
 class Consumer(multiprocessing.Process):
-    '''
-    DEF: 
-    '''
+
     def __init__(self, task_queue, result_queue, daemon=True):
         multiprocessing.Process.__init__(self)
         self.task_queue = task_queue
@@ -80,21 +78,7 @@ class Consumer(multiprocessing.Process):
             self.result_queue.put(answer)
  
 class Task:
-    """The summary line for a class docstring should fit on one line.
-
-    Attributes:
-        url (str): Description of url
-
-    """
     def __init__(self, url):
-        """
-        Note:
-            ''
-
-        Args:
-            url (str): Description of `url`.
-
-        """
         self.url = url
  
     def __call__(self):
@@ -114,7 +98,7 @@ class Task:
  
 class HttpTraffic:
 
-    def __init__(self, url, runtime, timeout = 10):
+    def __init__(self, url, runtime, timeout = 5):
         self.runtime = runtime
         self.url = url
         self._count_timer = 0
@@ -162,7 +146,6 @@ class HttpTraffic:
         # Setup logger
         logging.basicConfig(filename='traffic_sim.log', level=logging.INFO)
 
-
         # Start printing/logging results
         while True:
             try:
@@ -179,10 +162,13 @@ class HttpTraffic:
 if __name__ == '__main__':
 
     try:
-        MAX_RUNTIME = 1000
-        URL = 'http://167.99.129.215:8081'
-        simulator = HttpTraffic(URL, MAX_RUNTIME)
-        simulator.start()
+        if len(sys.argv) == 3:
+            MAX_RUNTIME = int(sys.argv[2])
+            URL = sys.argv[1]
+            simulator = HttpTraffic(URL, MAX_RUNTIME)
+            simulator.start()
     except KeyboardInterrupt:
-        sys.exit(0) # or 1, or whatever
+        # ctrl-c is an acceptable end scenario for this script
+        sys.exit(0) 
+
     
