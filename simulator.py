@@ -51,13 +51,13 @@ def init(l):
 
 
 if __name__ == '__main__':
-        l = Lock()
-        floatlist = generate_freq(int(sys.argv[1]))
-        
-        mylist = [[int(num)] for num in floatlist]   
-        pool = Pool(initializer=init, initargs=(l,))
-        pool.map(work_ordered_by_pooler, mylist)
-        pool.close()
-        pool.join()
+    l = Lock()
+    floatlist = generate_freq(int(sys.argv[1]))
+    
+    mylist = [[int(num)] for num in floatlist]   
+    pool = Pool(initializer=init, initargs=(l,))
+    pool.map(work_in_sorted_order, mylist)
+    pool.close()
+    pool.join()
             
 
